@@ -7,4 +7,6 @@ public interface Cobravel {
     void setStatus(Status status);
     int getDiaVencimento();
     double getValorBase();
+    boolean isPago();
+    void setPago(boolean pago);
 }

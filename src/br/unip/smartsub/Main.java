@@ -3,7 +3,7 @@ package br.unip.smartsub;
 import br.unip.smartsub.assinatura.*;
 import br.unip.smartsub.financeiro.GerenciadorArquivo;
 import br.unip.smartsub.financeiro.GerenciadorFinanceiro;
-
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class Main {
@@ -16,20 +16,19 @@ public class Main {
 
         int opcao = 0;
 
-        while (opcao != 5) {
+        while (opcao != 4) {
             System.out.println("\n--- GERENCIADOR SMARTSUB ---");
             System.out.println("1. Cadastrar Assinatura");
-            System.out.println("2. Alterar Status (Ativar/Pausar)");
-            System.out.println("3. Relatório: Mês Atual (Fatura Fechada)");
-            System.out.println("4. Relatório: Próximo Mês (Previsibilidade)");
-            System.out.println("5. Sair e Salvar Dados");
+            System.out.println("2. Gerenciar / Dar Baixa em Assinatura");
+            System.out.println("3. Exibir Painel Financeiro Consolidado");
+            System.out.println("4. Sair e Salvar Dados");
             System.out.print("Escolha uma opção: ");
 
             opcao = lerOpcaoMenu(scanner);
 
             switch (opcao) {
                 case 1:
-                    System.out.print("Nome do serviço (Ex: Netflix): ");
+                    System.out.print("Nome do serviço: ");
                     String nome = scanner.nextLine();
 
                     System.out.print("Valor Mensal (R$): ");
@@ -46,49 +45,77 @@ public class Main {
                     if (gerenciador.getAssinaturas().isEmpty()) {
                         System.out.println("Nenhuma assinatura cadastrada.");
                     } else {
-                        System.out.println("\n--- ALTERAR STATUS ---");
+                        System.out.println("\n--- GERENCIAR ASSINATURA ---");
                         for (int i = 0; i < gerenciador.getAssinaturas().size(); i++) {
                             Cobravel sub = gerenciador.getAssinaturas().get(i);
-                            System.out.printf("%d. %s (Status: %s)\n", (i + 1), sub.getNome(), sub.getStatus());
+                            System.out.printf("%d. %s\n", (i + 1), sub.getNome());
                         }
                         System.out.print("Digite o número da assinatura: ");
 
                         int index = lerIndexValido(scanner, gerenciador.getAssinaturas().size());
-
                         Cobravel selecionada = gerenciador.getAssinaturas().get(index);
-                        selecionada.setStatus(selecionada.getStatus() == Status.ATIVA ? Status.PAUSADA : Status.ATIVA);
-                        System.out.println("✔ Status alterado para: " + selecionada.getStatus());
+
+                        System.out.println("\nO que deseja fazer com '" + selecionada.getNome() + "'?");
+                        System.out.println("1. Marcar como Paga (Dar baixa este mês)");
+                        System.out.println("2. Pausar / Reativar Serviço (Contrato)");
+                        System.out.println("3. Voltar ao Menu Principal");
+                        System.out.print("Escolha uma opção: ");
+
+                        int subOpcao = lerSubMenuValido(scanner);
+
+                        if (subOpcao == 1) {
+                            selecionada.setPago(true);
+                            System.out.println("✔ Assinatura marcada como PAGA!");
+                        } else if (subOpcao == 2) {
+                            selecionada.setStatus(selecionada.getStatus() == Status.ATIVA ? Status.PAUSADA : Status.ATIVA);
+                            System.out.println("✔ Status alterado para: " + selecionada.getStatus());
+                        }
                     }
                     break;
 
                 case 3:
-                    System.out.println("\n--- FATURA DESTE MÊS ---");
+                    System.out.println("\n--- PAINEL FINANCEIRO: " + gerenciador.obterNomeMesAtual() + " ---");
                     gerenciador.ordenarPorVencimento();
+                    int diaAtual = LocalDate.now().getDayOfMonth();
+
                     for (Cobravel sub : gerenciador.getAssinaturas()) {
-                        System.out.printf("Dia %02d | %s [%s]: R$ %.2f\n", sub.getDiaVencimento(), sub.getNome(), sub.getStatus(), sub.calcularCustoMensal());
+                        String statusTempo;
+                        double valorExibido = sub.calcularCustoMensal();
+
+                        if (sub.getStatus() == Status.PAUSADA) {
+                            statusTempo = "PAUSADA";
+                        } else if (sub.isPago()) {
+                            statusTempo = "PAGA";
+                        } else if (sub.getDiaVencimento() < diaAtual) {
+                            statusTempo = "ATRASADA / NÃO PAGA";
+                        } else if (sub.getDiaVencimento() == diaAtual) {
+                            statusTempo = "VENCE HOJE";
+                        } else {
+                            int diasRestantes = sub.getDiaVencimento() - diaAtual;
+                            statusTempo = "PENDENTE - Vence em " + diasRestantes + " dias";
+                        }
+
+                        System.out.printf("Dia %02d | %s [%s]: R$ %.2f\n", sub.getDiaVencimento(), sub.getNome(), statusTempo, valorExibido);
                     }
                     System.out.println("------------------------------------");
-                    System.out.printf("TOTAL A PAGAR NESTE MÊS: R$ %.2f\n", gerenciador.calcularTotalMesAtual());
+                    double pago = gerenciador.calcularTotalPagoMesAtual();
+                    double total = gerenciador.calcularTotalMesAtual();
+                    double restante = total - pago;
+
+                    System.out.printf("Total já pago este mês: R$ %.2f\n", pago);
+                    System.out.printf("Total restante a pagar: R$ %.2f\n", restante);
+                    System.out.printf("FATURA TOTAL DE %s: R$ %.2f\n", gerenciador.obterNomeMesAtual(), total);
+                    System.out.println();
+                    System.out.printf("PREVISÃO PARA %s: R$ %.2f\n", gerenciador.obterNomeProximoMes(), gerenciador.calcularProjecaoProximoMes());
                     break;
 
                 case 4:
-                    System.out.println("\n--- PREVISIBILIDADE PRÓXIMO MÊS ---");
-                    System.out.println("Simulação caso você reative TODAS as assinaturas pausadas:");
-                    gerenciador.ordenarPorVencimento();
-                    for (Cobravel sub : gerenciador.getAssinaturas()) {
-                        System.out.printf("Dia %02d | %s : R$ %.2f\n", sub.getDiaVencimento(), sub.getNome(), sub.getValorBase());
-                    }
-                    System.out.println("------------------------------------");
-                    System.out.printf("GASTO TOTAL PROJETADO: R$ %.2f\n", gerenciador.calcularProjecaoProximoMes());
-                    break;
-
-                case 5:
                     arquivo.salvar(gerenciador.getAssinaturas());
                     System.out.println("Dados salvos em 'assinaturas.txt'. Sistema encerrado.");
                     break;
 
                 default:
-                    System.out.println("Opção inválida! Selecione uma opção de 1 a 5.");
+                    System.out.println("Opção inválida! Selecione uma opção de 1 a 4.");
             }
         }
         scanner.close();
@@ -99,7 +126,21 @@ public class Main {
             try {
                 return Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
-                System.out.print("❌ Opção inválida! Digite um número correspondente ao menu: ");
+                System.out.print("Opção inválida! Digite um número correspondente ao menu: ");
+            }
+        }
+    }
+
+    private static int lerSubMenuValido(Scanner scanner) {
+        while (true) {
+            try {
+                int opcao = Integer.parseInt(scanner.nextLine());
+                if (opcao >= 1 && opcao <= 3) {
+                    return opcao;
+                }
+                System.out.print("Opção inválida! Digite 1, 2 ou 3: ");
+            } catch (NumberFormatException e) {
+                System.out.print("Opção inválida! Digite um número correspondente ao menu: ");
             }
         }
     }
@@ -110,7 +151,7 @@ public class Main {
                 String entrada = scanner.nextLine().replace(",", ".");
                 return Double.parseDouble(entrada);
             } catch (NumberFormatException e) {
-                System.out.print("❌ Valor inválido! Digite novamente o valor (ex: 55,90 ou 55.90): ");
+                System.out.print("Valor inválido! Digite novamente o valor: ");
             }
         }
     }
@@ -122,9 +163,9 @@ public class Main {
                 if (dia >= 1 && dia <= 31) {
                     return dia;
                 }
-                System.out.print("❌ Dia inválido! Digite um número de 1 a 31: ");
+                System.out.print("Dia inválido! Digite um número de 1 a 31: ");
             } catch (NumberFormatException e) {
-                System.out.print("❌ Entrada inválida! Digite um número inteiro para o dia: ");
+                System.out.print("Entrada inválida! Digite um número inteiro para o dia: ");
             }
         }
     }
@@ -136,9 +177,9 @@ public class Main {
                 if (index >= 0 && index < tamanhoLista) {
                     return index;
                 }
-                System.out.print("❌ Número fora da lista! Digite um número válido correspondente: ");
+                System.out.print("Número fora da lista! Digite um número válido correspondente: ");
             } catch (NumberFormatException e) {
-                System.out.print("❌ Entrada inválida! Digite o número da assinatura desejada: ");
+                System.out.print("Entrada inválida! Digite o número da assinatura desejada: ");
             }
         }
     }

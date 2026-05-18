@@ -1,9 +1,13 @@
 package br.unip.smartsub.financeiro;
 
 import br.unip.smartsub.assinatura.Cobravel;
+import br.unip.smartsub.assinatura.Status;
+import java.time.YearMonth;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public class GerenciadorFinanceiro {
     private List<Cobravel> assinaturas;
@@ -32,6 +36,16 @@ public class GerenciadorFinanceiro {
         return total;
     }
 
+    public double calcularTotalPagoMesAtual() {
+        double totalPago = 0.0;
+        for (Cobravel assinatura : assinaturas) {
+            if (assinatura.getStatus() == Status.ATIVA && assinatura.isPago()) {
+                totalPago += assinatura.calcularCustoMensal();
+            }
+        }
+        return totalPago;
+    }
+
     public double calcularProjecaoProximoMes() {
         double totalProjetado = 0.0;
         for (Cobravel assinatura : assinaturas) {
@@ -42,5 +56,15 @@ public class GerenciadorFinanceiro {
 
     public void ordenarPorVencimento() {
         assinaturas.sort(Comparator.comparingInt(Cobravel::getDiaVencimento));
+    }
+
+    public String obterNomeMesAtual() {
+        YearMonth mesAtual = YearMonth.now();
+        return mesAtual.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")).toUpperCase() + "/" + mesAtual.getYear();
+    }
+
+    public String obterNomeProximoMes() {
+        YearMonth proximoMes = YearMonth.now().plusMonths(1);
+        return proximoMes.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")).toUpperCase() + "/" + proximoMes.getYear();
     }
 }
