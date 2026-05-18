@@ -28,14 +28,26 @@ public class Main {
 
             switch (opcao) {
                 case 1:
-                    System.out.print("Nome do serviço: ");
+                    System.out.print("Nome do serviço (ou digite 'sair' para cancelar): ");
                     String nome = scanner.nextLine();
+                    if (nome.equalsIgnoreCase("sair")) {
+                        System.out.println("❌ Cadastro cancelado pelo usuário.");
+                        break;
+                    }
 
-                    System.out.print("Valor Mensal (R$): ");
+                    System.out.print("Valor Mensal (R$) (ou digite 'sair' para cancelar): ");
                     double valor = lerValorValido(scanner);
+                    if (valor == -1.0) {
+                        System.out.println("❌ Cadastro cancelado pelo usuário.");
+                        break;
+                    }
 
-                    System.out.print("Dia do Vencimento (1 a 31): ");
+                    System.out.print("Dia do Vencimento (1 a 31) (ou digite 'sair' para cancelar): ");
                     int dia = lerDiaValido(scanner);
+                    if (dia == -1) {
+                        System.out.println("❌ Cadastro cancelado pelo usuário.");
+                        break;
+                    }
 
                     gerenciador.adicionarAssinatura(new AssinaturaPadrao(nome, valor, Status.ATIVA, dia));
                     System.out.println("✔ Assinatura cadastrada com sucesso!");
@@ -48,17 +60,23 @@ public class Main {
                         System.out.println("\n--- GERENCIAR ASSINATURA ---");
                         for (int i = 0; i < gerenciador.getAssinaturas().size(); i++) {
                             Cobravel sub = gerenciador.getAssinaturas().get(i);
-                            System.out.printf("%d. %s\n", (i + 1), sub.getNome());
+                            System.out.printf("%d. %s [%s]\n", (i + 1), sub.getNome(), sub.getStatus());
                         }
-                        System.out.print("Digite o número da assinatura: ");
+                        System.out.print("Digite o número da assinatura (ou digite 'sair' para cancelar): ");
 
                         int index = lerIndexValido(scanner, gerenciador.getAssinaturas().size());
+                        if (index == -2) {
+                            System.out.println("❌ Ação cancelada.");
+                            break;
+                        }
+
                         Cobravel selecionada = gerenciador.getAssinaturas().get(index);
 
                         System.out.println("\nO que deseja fazer com '" + selecionada.getNome() + "'?");
                         System.out.println("1. Marcar como Paga (Dar baixa este mês)");
                         System.out.println("2. Pausar / Reativar Serviço (Contrato)");
-                        System.out.println("3. Voltar ao Menu Principal");
+                        System.out.println("3. EXCLUIR Assinatura Permanentemente 🗑");
+                        System.out.println("4. Voltar ao Menu Principal");
                         System.out.print("Escolha uma opção: ");
 
                         int subOpcao = lerSubMenuValido(scanner);
@@ -69,6 +87,9 @@ public class Main {
                         } else if (subOpcao == 2) {
                             selecionada.setStatus(selecionada.getStatus() == Status.ATIVA ? Status.PAUSADA : Status.ATIVA);
                             System.out.println("✔ Status alterado para: " + selecionada.getStatus());
+                        } else if (subOpcao == 3) {
+                            gerenciador.getAssinaturas().remove(index);
+                            System.out.println("🔥 '" + selecionada.getNome() + "' foi excluída permanentemente!");
                         }
                     }
                     break;
@@ -106,7 +127,7 @@ public class Main {
                     System.out.printf("Total restante a pagar: R$ %.2f\n", restante);
                     System.out.printf("FATURA TOTAL DE %s: R$ %.2f\n", gerenciador.obterNomeMesAtual(), total);
                     System.out.println();
-                    System.out.printf("PREVISÃO PARA %s: R$ %.2f\n", gerenciador.obterNomeProximoMes(), gerenciador.calcularProjecaoProximoMes());
+                    System.out.printf("🔮 PREVISÃO PARA %s: R$ %.2f\n", gerenciador.obterNomeProximoMes(), gerenciador.calcularProjecaoProximoMes());
                     break;
 
                 case 4:
@@ -126,7 +147,7 @@ public class Main {
             try {
                 return Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
-                System.out.print("Opção inválida! Digite um número correspondente ao menu: ");
+                System.out.print("❌ Opção inválida! Digite um número correspondente ao menu: ");
             }
         }
     }
@@ -135,51 +156,63 @@ public class Main {
         while (true) {
             try {
                 int opcao = Integer.parseInt(scanner.nextLine());
-                if (opcao >= 1 && opcao <= 3) {
+                if (opcao >= 1 && opcao <= 4) {
                     return opcao;
                 }
-                System.out.print("Opção inválida! Digite 1, 2 ou 3: ");
+                System.out.print("❌ Opção inválida! Digite 1, 2, 3 ou 4: ");
             } catch (NumberFormatException e) {
-                System.out.print("Opção inválida! Digite um número correspondente ao menu: ");
+                System.out.print("❌ Opção inválida! Digite um número correspondente: ");
             }
         }
     }
 
     private static double lerValorValido(Scanner scanner) {
         while (true) {
+            String entrada = scanner.nextLine().trim();
+            if (entrada.equalsIgnoreCase("sair")) {
+                return -1.0;
+            }
             try {
-                String entrada = scanner.nextLine().replace(",", ".");
+                entrada = entrada.replace(",", ".");
                 return Double.parseDouble(entrada);
             } catch (NumberFormatException e) {
-                System.out.print("Valor inválido! Digite novamente o valor: ");
+                System.out.print("❌ Valor inválido! Digite o valor novamente (ou 'sair' para cancelar): ");
             }
         }
     }
 
     private static int lerDiaValido(Scanner scanner) {
         while (true) {
+            String entrada = scanner.nextLine().trim();
+            if (entrada.equalsIgnoreCase("sair")) {
+                return -1;
+            }
             try {
-                int dia = Integer.parseInt(scanner.nextLine());
+                int dia = Integer.parseInt(entrada);
                 if (dia >= 1 && dia <= 31) {
                     return dia;
                 }
-                System.out.print("Dia inválido! Digite um número de 1 a 31: ");
+                System.out.print("❌ Dia inválido! Digite um número de 1 a 31 (ou 'sair' para cancelar): ");
             } catch (NumberFormatException e) {
-                System.out.print("Entrada inválida! Digite um número inteiro para o dia: ");
+                System.out.print("❌ Entrada inválida! Digite um número inteiro para o dia (ou 'sair' para cancelar): ");
             }
         }
     }
 
     private static int lerIndexValido(Scanner scanner, int tamanhoLista) {
         while (true) {
+            String entrada = scanner.nextLine().trim();
+            if (entrada.equalsIgnoreCase("sair")) {
+                return -2;
+            }
             try {
-                int index = Integer.parseInt(scanner.nextLine()) - 1;
+                int index = Integer.parseInt(entrada) - 1;
                 if (index >= 0 && index < tamanhoLista) {
                     return index;
                 }
-                System.out.print("Número fora da lista! Digite um número válido correspondente: ");
+                System.out.print("❌ Número fora da lista! Digite um número correspondente (ou 'sair' para cancelar): ");
             } catch (NumberFormatException e) {
-                System.out.print("Entrada inválida! Digite o número da assinatura desejada: ");
+                System.out.print("❌ Entrada inválida! Digite o número desejado (ou 'sair' para cancelar): ");
             }
         }
     }
