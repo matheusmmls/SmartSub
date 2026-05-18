@@ -13,14 +13,19 @@ O projeto conta com um ambiente de desenvolvimento em nuvem pré-configurado. Vo
 
 ### Instruções para Execução
 
-1. Clique no botão **Open in GitHub Codespaces** acima.
-2. Aguarde a inicialização do container e do terminal integrado do VS Code.
-3. No terminal, execute o seguinte comando para iniciar a aplicação:
+1. Clique no botão **Open in GitHub Codespaces** exibido acima.
+2. Caso solicitado pela interface do GitHub, clique no botão **Create a codespace**.
+3. Aguarde a inicialização completa do container e o carregamento do terminal integrado do VS Code no navegador.
+4. No menu lateral esquerdo de navegação de arquivos, abra a pasta `src`.
+5. Clique no arquivo `Main.java` para abrir o código-fonte na tela.
+6. Clique no botão de execução (ícone de reprodução/Play) localizado no canto superior direito da interface da IDE.
+7. Quando a notificação do sistema exibir a mensagem *"Run/Debug feature requires Java language server to run in Standard mode..."*, clique no botão verde **Yes**.
+8. O terminal interativo do SmartSub será iniciado automaticamente no painel inferior para testes.
 
-```bash
-java src/br/unip/smartsub/Main.java
+ ### Tutorial Visual
 
-```
+
+<img width="2278" height="1080" alt="codespacetutorial" src="https://github.com/user-attachments/assets/209c3a34-c457-47bc-9a3c-ee82d43793e8" />
 
 ---
 
@@ -65,15 +70,5 @@ git clone [https://github.com/matheusmmls/SmartSub.git](https://github.com/mathe
 ```bash
 java src/br/unip/smartsub/Main.java
 
-```
 
 
-
-```
-
-### O que foi corrigido:
-1. **Link do Codespaces:** O link agora aponta corretamente para `https://codespaces.new/matheusmmls/SmartSub`, removendo a URL da sua sessão privada que daria erro para outras pessoas.
-2. **Unificação:** A demonstração online agora é focada apenas no Codespaces, que é a ferramenta nativa do GitHub e passa uma imagem muito mais profissional para o seu perfil.
-3. **Sintaxe Markdown:** Fechei todos os blocos de código ` 
-
-```
